@@ -9,22 +9,38 @@ public class Hangman {
     StringBuilder hiddenPhrase;
     String previousGuesses;
 
-    public Hangman(){ }
-    /**
-     * returns a single phrase randomly chosen from a list
-     * @param phraseList from file on main
-     * @return randomPhrase
-     */
-    public String randomPhrase(List<String> phraseList){
-        randomPhrase=phraseList.get((int)Math.random()*phraseList.size());
-        return randomPhrase;
+    public Hangman(){
+        randomPhrase ="";
+        hiddenPhrase = null;
+        previousGuesses = "";
+    }
+
+    public static void main(String[] args) {
+        System.out.println("Welcome to Hangman!\n");
+        Hangman hangman = new Hangman();
+        hangman.play();
     }
 
     /**
-     * returns the initial hidden phrase from randomPhrase
-     * @return hiddenPhrase
+     * create a single phrase randomly chosen from a list
      */
-    public StringBuilder generateHiddenPhrase(){
+    public void randomPhrase(){
+        List<String> phraseList = null;
+
+        // Get the phrase from a file of phrases
+        try {
+            phraseList = Files.readAllLines(Paths.get("phrases.txt"));
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        assert phraseList != null;
+        randomPhrase=phraseList.get((int) (Math.random() * phraseList.size()));
+    }
+
+    /**
+     * create the initial hidden phrase from randomPhrase
+     */
+    public void generateHiddenPhrase(){
         hiddenPhrase = new StringBuilder();
         char ch;
         for(int i=0;i<randomPhrase.length();i++){
@@ -34,14 +50,13 @@ public class Hangman {
             }
             hiddenPhrase.append(ch);
         }
-        return hiddenPhrase;
     }
 
     /**
-     * @param input gets input guess from user
      * @return ch character from user input
      */
-    public char getGuess(Scanner input){
+    public char getGuess(){
+        Scanner input = new Scanner(System.in);
         System.out.print("Guess a letter: ");
         return input.next().charAt(0);
     }
@@ -58,13 +73,13 @@ public class Hangman {
         String phraseLowerCase = randomPhrase.toLowerCase();
 
         if(!Character.isLetter(guess)){
-            System.out.println(guess+" is not a letter");
+            System.out.println(guess+" is not a letter\n");
         }
         if(hiddenPhrase.indexOf(guessLowerCase+"")>=0||hiddenPhrase.indexOf(guessUpperCase+"")>=0){
-            System.out.println("This correct guess had been made");
+            System.out.println("This correct guess had been made\n");
         }
         if(previousGuesses.contains(guess+"")){
-            System.out.println("This incorrect guess had been made");
+            System.out.println("This incorrect guess had been made\n");
         }
         for(int i = 0; i<hiddenPhrase.length();i++) {
             if (guessLowerCase == phraseLowerCase.charAt(i)) {
@@ -75,53 +90,44 @@ public class Hangman {
         return isMissed;
     }
 
-    public static void main(String[] args) {
-        Hangman hangman = new Hangman();
-        List<String> phraseList = null;
-
-        // Get the phrase from a file of phrases
-        try {
-            phraseList = Files.readAllLines(Paths.get("phrases.txt"));
-        } catch (IOException e) {
-            System.out.println(e);
-        }
-        System.out.println("Welcome to Hangman!\n");
-        hangman.randomPhrase(phraseList);
-
-
-        // Call generateHiddenPhrase
-        hangman.generateHiddenPhrase();
-
+    /**
+     * count missed to determine if the user win/lose
+     */
+    public void getResult(){
         // Set the number of n and miss
-        int n = hangman.randomPhrase.length()/3;
+        int n = randomPhrase.length()/3;
         int miss = 0;
 
         // Declare local variables
         boolean isMissed;
-        hangman.previousGuesses = "";
         char ch;
 
-        // Get user's input
-        Scanner input = new Scanner(System.in);
-
-        while (miss < n && !hangman.hiddenPhrase.toString().equals(hangman.randomPhrase)){
-            System.out.println("Current phrase: " + hangman.hiddenPhrase);
-            ch = hangman.getGuess(input);
-            isMissed = hangman.processGuess(ch);
+        while (miss < n && !hiddenPhrase.toString().equals(randomPhrase)){
+            System.out.println("Current phrase: " + hiddenPhrase);
+            ch = getGuess();
+            isMissed = processGuess(ch);
             if (isMissed) {
                 miss++;
                 System.out.println("The guessed letter does not occur in the phrase");
-                System.out.println("There are " + miss + " miss(es) and " + (n - miss) + " chance(s) left");
+                System.out.println("There are " + miss + " miss(es) and " + (n-miss) + " chance(s) left\n");
             }
-            hangman.previousGuesses += ch;
+            previousGuesses += ch;
         }
 
-        System.out.println("");
         if (miss < n) {
-            System.out.println("You win!");
-            System.out.println("The phrase is: " + hangman.randomPhrase);
+            System.out.println("\nYou won!");
+            System.out.println("The phrase is: " + randomPhrase);
         } else {
-            System.out.println("You lose");
+            System.out.println("\nYou lost, try again!");
         }
+    }
+
+    /**
+     * play a game of hangman, this version 3 uses methods and data members
+     */
+    public void play(){
+        this.randomPhrase();
+        this.generateHiddenPhrase();
+        this.getResult();
     }
 }
